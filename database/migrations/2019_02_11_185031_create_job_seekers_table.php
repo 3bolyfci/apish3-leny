@@ -19,7 +19,7 @@ class CreateJobSeekersTable extends Migration
             $table->text('bio')->nullable();  // Brief Biography
             $table->string('position')->nullable(); // current position if jobSeeker working or not
             $table->string('linked_in')->nullable(); // url of linkedIn if jobSeeker has
-            $table->integer('user_id')->unsigned(); // jobSeeker belong to one user in system
+            $table->unsignedInteger('user_id'); // jobSeeker belong to one user in system
             $table->foreign('user_id')->references('id')->on('users')->onDelete('cascade');
             $table->timestamps();
         });

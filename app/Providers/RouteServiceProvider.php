@@ -69,7 +69,7 @@ class RouteServiceProvider extends ServiceProvider
         Route::prefix('api')
             ->middleware('api')
             ->domain(env('jobSeeker_url'))
-            ->namespace($this->namespace . '\JobSeeker')
+            ->namespace($this->namespace)
             ->group(base_path('routes/jobSeeker.php'));
     }
 

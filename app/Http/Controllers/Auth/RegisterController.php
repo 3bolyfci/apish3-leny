@@ -2,14 +2,16 @@
 
 namespace App\Http\Controllers\Auth;
 
-use App\User;
+use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Controllers\Controller;
-use Illuminate\Support\Facades\Hash;
-use Illuminate\Support\Facades\Validator;
-use Illuminate\Foundation\Auth\RegistersUsers;
+use App\Repo\UserRepoTrait;
+use App\User;
+
 
 class RegisterController extends Controller
 {
+    use UserRepoTrait;
+
     /*
     |--------------------------------------------------------------------------
     | Register Controller
@@ -20,53 +22,19 @@ class RegisterController extends Controller
     | provide this functionality without requiring any additional code.
     |
     */
-
-    use RegistersUsers;
-
     /**
-     * Where to redirect users after registration.
-     *
-     * @var string
+     * @todo register new user in system and return his with token and refresh token
+     * @param RegisterRequest $registerRequest
+     * @return User
      */
-    protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function register(RegisterRequest $registerRequest)
     {
-        $this->middleware('guest');
-    }
-
-    /**
-     * Get a validator for an incoming registration request.
-     *
-     * @param  array  $data
-     * @return \Illuminate\Contracts\Validation\Validator
-     */
-    protected function validator(array $data)
-    {
-        return Validator::make($data, [
-            'name' => ['required', 'string', 'max:255'],
-            'email' => ['required', 'string', 'email', 'max:255', 'unique:users'],
-            'password' => ['required', 'string', 'min:6', 'confirmed'],
-        ]);
-    }
-
-    /**
-     * Create a new user instance after a valid registration.
-     *
-     * @param  array  $data
-     * @return \App\User
-     */
-    protected function create(array $data)
-    {
-        return User::create([
-            'name' => $data['name'],
-            'email' => $data['email'],
-            'password' => Hash::make($data['password']),
-        ]);
+        $newUser = $this->store($registerRequest);
+        if (is_null($newUser)) {
+            return response();
+        }
+        $token = $this->attempt($registerRequest->only('email', 'password'));
+        $refreshToken = $this->refreshToken($token);
+        return response(['token'=>$token,'refreshToken'=>$refreshToken]);
     }
 }

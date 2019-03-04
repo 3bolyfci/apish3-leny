@@ -3,7 +3,9 @@
 namespace App\Http\Controllers\Auth;
 
 use App\Http\Controllers\Controller;
-use Illuminate\Foundation\Auth\AuthenticatesUsers;
+use App\Http\Requests\Auth\LoginRequest;
+use App\Repo\UserRepoTrait;
+use Facades\Tymon\JWTAuth\JWTAuth;
 
 class LoginController extends Controller
 {
@@ -17,23 +19,13 @@ class LoginController extends Controller
     | to conveniently provide its functionality to your applications.
     |
     */
+    use UserRepoTrait;
 
-    use AuthenticatesUsers;
-
-    /**
-     * Where to redirect users after login.
-     *
-     * @var string
-     */
-    protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function login(LoginRequest $loginRequest)
     {
-        $this->middleware('guest')->except('logout');
+
+        $token = $this->attempt($loginRequest->only('email', 'password'));
+        return $currentUser =JWTAuth::toUser($token);
+;
     }
 }
