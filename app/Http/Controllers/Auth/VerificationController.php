@@ -2,8 +2,12 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helper\AuthTrait;
 use App\Http\Controllers\Controller;
+use Illuminate\Auth\Events\Verified;
 use Illuminate\Foundation\Auth\VerifiesEmails;
+use Illuminate\Http\Request;
+use Illuminate\Support\Facades\Log;
 
 class VerificationController extends Controller
 {
@@ -18,24 +22,29 @@ class VerificationController extends Controller
     |
     */
 
-    use VerifiesEmails;
+    use VerifiesEmails, AuthTrait;
 
     /**
-     * Where to redirect users after verification.
-     *
-     * @var string
+     * @param Request $request
+     * @return \Illuminate\Contracts\Routing\ResponseFactory|\Illuminate\Http\Response
      */
-    protected $redirectTo = '/home';
-
-    /**
-     * Create a new controller instance.
-     *
-     * @return void
-     */
-    public function __construct()
+    public function verify(Request $request)
     {
-        $this->middleware('auth');
-        $this->middleware('signed')->only('verify');
-        $this->middleware('throttle:6,1')->only('verify', 'resend');
+        try {
+            $token = $this->token();
+            $user = $this->getCurrentUser($token);
+            if ($user->hasVerifiedEmail()) {
+                return response(['success' => false, 'body' => 'email has been verified before'], 200);
+            }
+            if ($user->markEmailAsVerified()) {
+                event(new Verified($user));
+            }
+            return response(['success' => true, 'body' => 'email verified'], 200);
+        } catch (\Exception $exception) {
+            Log::error(['method' => __METHOD__, 'message' => $exception->getMessage(), 'exception' => ($exception->getTraceAsString())]);
+            return response(['success' => false, 'message' => 'can not verify account'], $exception->getStatusCode());
+        }
+
     }
+
 }

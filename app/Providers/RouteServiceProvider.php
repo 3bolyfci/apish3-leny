@@ -38,6 +38,7 @@ class RouteServiceProvider extends ServiceProvider
         $this->mapApiAdminRoutes();
         $this->mapApiJobSeekerRoutes();
         $this->mapApiEmployerRoutes();
+        $this->mapApiAuthRoutes();
     }
 
 
@@ -68,8 +69,8 @@ class RouteServiceProvider extends ServiceProvider
     {
         Route::prefix('api')
             ->middleware('api')
-            ->domain(env('jobSeeker_url'))
-            ->namespace($this->namespace)
+            ->domain(env('JOBSEEKER_URL'))
+            ->namespace($this->namespace . '\JobSeeker')
             ->group(base_path('routes/jobSeeker.php'));
     }
 
@@ -84,9 +85,18 @@ class RouteServiceProvider extends ServiceProvider
     {
         Route::prefix('api')
             ->middleware('api')
-            ->domain(env('Employer_url'))
+            ->domain(env('EMPLOYER_URL'))
             ->namespace($this->namespace . '\Employer')
             ->group(base_path('routes/employer.php'));
+    }
+
+    protected function mapApiAuthRoutes()
+    {
+        Route::prefix('api')
+            ->middleware('api')
+            ->domain(env('AUTH_URL'))
+            ->namespace($this->namespace . '\Auth')
+            ->group(base_path('routes/auth.php'));
     }
 
 }

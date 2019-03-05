@@ -7,10 +7,14 @@ use Illuminate\Http\Request;
 use Illuminate\Support\Collection;
 use Illuminate\Support\Facades\DB;
 use Illuminate\Support\Facades\Hash;
-use Facades\Tymon\JWTAuth\JWTAuth;
+
 
 trait UserRepoTrait
 {
+    /**
+     * @param Request $request
+     * @return User|null
+     */
     protected function store(Request $request)
     {
         DB::beginTransaction();
@@ -31,17 +35,23 @@ trait UserRepoTrait
     }
 
     /**
-     * @todo take array of credentials and attempt
-     * @param array $credentials
-     * @return mixed
+     * @param User $user
+     * @param Request $request
+     * @return User|null
      */
-    protected function attempt(array $credentials)
+    protected function reset(User $user, Request $request)
     {
-        return JWTAuth::attempt($credentials);
-    }
-    protected function update(User $user, Request $request)
-    {
+        DB::beginTransaction();
 
+        try {
+            $user->password = Hash::make($request->password);
+            $user->save();
+            DB::commit();
+            return $user;
+        } catch (\Exception $e) {
+            DB::rollback();
+            return null;
+        }
     }
 
     protected function delete(collection $collection)

@@ -2,15 +2,17 @@
 
 namespace App\Http\Controllers\Auth;
 
+use App\Helper\AuthTrait;
 use App\Http\Requests\Auth\RegisterRequest;
 use App\Http\Controllers\Controller;
+use App\Http\Resources\User\UserResource;
 use App\Repo\UserRepoTrait;
-use App\User;
+use Illuminate\Support\Facades\Log;
 
 
 class RegisterController extends Controller
 {
-    use UserRepoTrait;
+    use UserRepoTrait, AuthTrait;
 
     /*
     |--------------------------------------------------------------------------
@@ -25,16 +27,21 @@ class RegisterController extends Controller
     /**
      * @todo register new user in system and return his with token and refresh token
      * @param RegisterRequest $registerRequest
-     * @return User
+     * @return UserResource
      */
     public function register(RegisterRequest $registerRequest)
     {
-        $newUser = $this->store($registerRequest);
-        if (is_null($newUser)) {
-            return response();
+        try {
+            $newUser = $this->store($registerRequest);
+            if (is_null($newUser)) {
+                return response(['success' => false, 'body' => 'can not create user'], 419);
+            }
+            $token = $this->attempt($registerRequest->only('email', 'password'));
+            return new UserResource($newUser, $token);
+        } catch (\Exception $e) {
+            Log::error(['success' => false, 'message' => $e->getMessage()]);
+            return response(['success' => false, 'body' => 'can not create user'], 419);
         }
-        $token = $this->attempt($registerRequest->only('email', 'password'));
-        $refreshToken = $this->refreshToken($token);
-        return response(['token'=>$token,'refreshToken'=>$refreshToken]);
+
     }
 }
